@@ -4,22 +4,28 @@
     <meta charset="UTF-8">
     <title>Vinderne af quizzen</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <script defer src="/script/app.js"></script>
 </head>
 <body>
+<div class="main-container">
 <h1>Quiz tilmelding</h1>
+
+<h2>
+    Tilmeldinger til
+    <span id="quizDateLabel">...</span>
+</h2>
 
 <div class="form-container">
     <input id="nameInput" type="text" placeholder="Skriv dit navn">
     <button id="signupBtn">Tilmeld</button>
 </div>
+<h3> Deltagere:(
+    <span id="deltagerCount">0</span>
+    )
+</h3>
 
-<h2>
-    Tilmeldinger til
-    <span id=quizDateLabel">...</span>
-    (<span id="deltagerCount">0</span>)
-</h2>
 <ul id="deltagerListe"></ul>
 
-<script src="/script/app.js"></script>
+</div>
 </body>
 </html>

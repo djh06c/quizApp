@@ -1,3 +1,5 @@
+// ---- Konstanter / DOM-elementer ----
+
 const apiBase = "/api/deltagere";
 const quizApi = "/api/quiz/date";
 
@@ -5,25 +7,51 @@ const nameInput = document.getElementById("nameInput");
 const signupBtn = document.getElementById("signupBtn");
 const deltagerListe = document.getElementById("deltagerListe");
 const quizDateLabel = document.getElementById("quizDateLabel");
+const deltagerCount = document.getElementById("deltagerCount");
 
+// Når siden er klar
 document.addEventListener("DOMContentLoaded", () => {
     loadQuizDate();
     loadDeltagere();
+    nameInput.focus();
 });
 
-function loadQuizDate(){
+// ---- Quiz-dato ----
+
+function loadQuizDate() {
     fetch(quizApi)
-        .then(res => res.json())
-        .then(data => {
-            const d = new Date(data.quizDate);
-            quizDateLabel.textContent = d.toLocaleDateString("da-DK", {
-                weekday: "long",
-                day: "numeric",
-                month: "long"
-            });
+        .then(res => {
+            if (!res.ok) {
+                throw new Error("Kunne ikke hente quizdato");
+            }
+            return res.json();
         })
-        .catch(err => console.error("Fejl i quizdato:", err));
+        .then(data => {
+            console.log("Quiz-dato fra backend:", data);
+
+            if (!quizDateLabel) return;
+
+            // Vis rå dato (fx 2025-11-26) – nemt og sikkert
+            quizDateLabel.textContent = data.quizDate;
+        })
+        .catch(err => {
+            console.error("Fejl i quizdato:", err);
+            if (quizDateLabel) {
+                quizDateLabel.textContent = "ukendt dato";
+            }
+        });
 }
+
+// ---- Enter = tilmeld ----
+
+nameInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        signupBtn.click();
+    }
+});
+
+// ---- Opret deltager ----
 
 signupBtn.addEventListener("click", () => {
     const name = nameInput.value.trim();
@@ -44,33 +72,56 @@ signupBtn.addEventListener("click", () => {
         })
         .then(() => {
             nameInput.value = "";
+            nameInput.focus();
             loadDeltagere();
         })
-        .catch(err => console.error(err));
+        .catch(err => console.error("Fejl i POST:", err));
 });
+
+// ---- Hent + vis deltagere ----
 
 function loadDeltagere() {
     fetch(apiBase)
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                throw new Error("Kunne ikke hente deltagere");
+            }
+            return res.json();
+        })
         .then(data => {
             console.log("Deltagere fra backend:", data);
 
-            document.getElementById("deltagerCount").textContent = data.length;
+            // Opdater tæller
+            if (deltagerCount) {
+                deltagerCount.textContent = data.length;
+            }
+
+            // Ryd liste
             deltagerListe.innerHTML = "";
+
+            // Byg liste
             data.forEach(p => {
                 const li = document.createElement("li");
-                li.textContent = p.name;
+
+                const nameSpan = document.createElement("span");
+                nameSpan.classList.add("participant-name");
+                nameSpan.textContent = p.name;
 
                 const deleteBtn = document.createElement("button");
+                deleteBtn.type = "button";
                 deleteBtn.textContent = "Slet";
+                deleteBtn.classList.add("delete-btn");
                 deleteBtn.addEventListener("click", () => deleteDeltager(p.id));
 
+                li.appendChild(nameSpan);
                 li.appendChild(deleteBtn);
                 deltagerListe.appendChild(li);
             });
         })
-        .catch(err => console.error(err));
+        .catch(err => console.error("Fejl i GET:", err));
 }
+
+// ---- Slet deltager ----
 
 function deleteDeltager(id) {
     fetch(`${apiBase}/${id}`, { method: "DELETE" })
@@ -80,5 +131,5 @@ function deleteDeltager(id) {
             }
             loadDeltagere();
         })
-        .catch(err => console.error(err));
+        .catch(err => console.error("Fejl i DELETE:", err));
 }
